@@ -1,0 +1,324 @@
+import {Component} from 'react'
+
+import Loader from 'react-loader-spinner'
+import LanguageFilterItem from '../LanguageFilterItem'
+import RepositoryItem from '../RepositoryItem'
+import './index.css'
+
+const languageFiltersData = [
+  {id: 'ALL', language: 'All'},
+  {id: 'JAVASCRIPT', language: 'Javascript'},
+  {id: 'RUBY', language: 'Ruby'},
+  {id: 'JAVA', language: 'Java'},
+  {id: 'CSS', language: 'CSS'},
+]
+const apiStatus = {
+  initial: 'INITIAL',
+  success: 'SUCCESS',
+  inProgress: 'IN_PROGRESS',
+  failure: 'FAILURE',
+}
+
+// Write your code here
+class GithubPopularRepos extends Component {
+  state = {
+    repositoryItems: [],
+    activeApiStatus: apiStatus.initial,
+    activeLanguageId: languageFiltersData[0].id,
+  }
+
+  componentDidMount() {
+    this.languageFilterItems()
+  }
+
+  languageFilterItems = async () => {
+    this.setState({activeApiStatus: apiStatus.inProgress})
+    const {activeLanguageId} = this.state
+    const url = ` https://apis.ccbp.in/popular-repos?language=${activeLanguageId}`
+    const response = await fetch(url)
+    const data = await response.json()
+    console.log(response)
+    if (response.ok === true) {
+      console.log(data)
+      const popularRepos = data.popular_repos.map(eachItem => ({
+        name: eachItem.name,
+        id: eachItem.id,
+        issuesCount: eachItem.issues_count,
+        forksCount: eachItem.forks_count,
+        starsCount: eachItem.stars_count,
+        avatarUrl: eachItem.avatar_url,
+      }))
+      this.setState({
+        repositoryItems: popularRepos,
+        activeApiStatus: apiStatus.success,
+      })
+    } else {
+      this.setState({activeApiStatus: apiStatus.failure})
+    }
+  }
+
+  onLoadingView = () => (
+    <div data-testid="loader">
+      <Loader type="ThreeDots" color="#0284c7" height={80} width={80} />
+    </div>
+  )
+
+  languageFilterSuccessView = () => {
+    const {repositoryItems} = this.state
+    return (
+      <ul className="items-container">
+        {repositoryItems.map(eachItem => (
+          <RepositoryItem repoItem={eachItem} key={eachItem.id} />
+        ))}
+      </ul>
+    )
+  }
+
+  languageFilterFailureView = () => (
+    <div className="failure-view-container">
+      <img
+        className="failure-view-img"
+        src="https://assets.ccbp.in/frontend/react-js/api-failure-view.png"
+        alt="failure view"
+      />
+      <p className="failure-view-text">Something Went Wrong</p>
+    </div>
+  )
+
+  languageFilterViews = () => {
+    const {activeApiStatus} = this.state
+    switch (activeApiStatus) {
+      case apiStatus.success:
+        return this.languageFilterSuccessView()
+      case apiStatus.failure:
+        return this.languageFilterFailureView()
+      case apiStatus.inProgress:
+        return this.onLoadingView()
+      default:
+        return null
+    }
+  }
+
+  onChangeActiveLanguage = id => {
+    this.setState({activeLanguageId: id}, this.languageFilterItems)
+  }
+
+  render() {
+    const {activeLanguageId} = this.state
+    return (
+      <div className="bg-container">
+        <h1 className="popular-title">Popular</h1>
+        <ul className="items-container">
+          {languageFiltersData.map(eachItem => (
+            <LanguageFilterItem
+              languageItem={eachItem}
+              key={eachItem.id}
+              activeLanguageId={activeLanguageId}
+              activeLanguageChange={this.onChangeActiveLanguage}
+            />
+          ))}
+        </ul>
+        <div>{this.languageFilterViews()}</div>
+      </div>
+    )
+  }
+}
+
+export default GithubPopularRepos
+.bg-container {
+  display: flex;
+  flex-direction: column;
+
+  align-items: center;
+  padding: 20px;
+  min-height: 100vh;
+}
+.items-container {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  list-style-type: none;
+}
+.failure-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 30px;
+}
+.failure-view-img {
+  width: 550px;
+}
+.failure-view-text {
+  color: #1e293b;
+  font-family: 'Lobster';
+  font-size: 20px;
+  font-weight: bold;
+}
+@media screen and (min-width: 768px) {
+  .failure-view-text {
+    font-size: 35px;
+  }
+}
+.popular-title {
+  color: #0f172a;
+  font-family: 'Lobster';
+  font-size: 30px;
+  font-weight: bold;
+}
+import {Component} from 'react'
+
+import Loader from 'react-loader-spinner'
+import LanguageFilterItem from '../LanguageFilterItem'
+import RepositoryItem from '../RepositoryItem'
+import './index.css'
+
+const languageFiltersData = [
+  {id: 'ALL', language: 'All'},
+  {id: 'JAVASCRIPT', language: 'Javascript'},
+  {id: 'RUBY', language: 'Ruby'},
+  {id: 'JAVA', language: 'Java'},
+  {id: 'CSS', language: 'CSS'},
+]
+const apiStatus = {
+  initial: 'INITIAL',
+  success: 'SUCCESS',
+  inProgress: 'IN_PROGRESS',
+  failure: 'FAILURE',
+}
+
+import './index.css'
+
+const RepositoryItem = props => {
+  const {repoItem} = props
+  const {name, issuesCount, forksCount, starsCount, avatarUrl} = repoItem
+  return (
+    <li className="repo-list-item">
+      <img className="each-repo-img" src={avatarUrl} alt={name} />
+      <h1 className="repo-name">{name}</h1>
+      <div className="icon-count-container">
+        <img
+          className="repo-icons"
+          src="https://assets.ccbp.in/frontend/react-js/stars-count-img.png"
+          alt="stars"
+        />
+        <p className="repo-item-info">{starsCount} stars</p>
+      </div>
+      <div className="icon-count-container">
+        <img
+          className="repo-icons"
+          src="https://assets.ccbp.in/frontend/react-js/forks-count-img.png"
+          alt="forks"
+        />
+        <p className="repo-item-info">{forksCount} forks</p>
+      </div>
+      <div className="icon-count-container">
+        <img
+          className="repo-icons"
+          src="https://assets.ccbp.in/frontend/react-js/issues-count-img.png"
+          alt="open issues"
+        />
+        <p className="repo-item-info">{issuesCount} open issues</p>
+      </div>
+    </li>
+  )
+}
+export default RepositoryItem
+.repo-list-item {
+  background-color: #f8f8ff;
+  display: flex;
+  flex-direction: column;
+  padding-left: 30px;
+  padding-right: 30px;
+  border-radius: 15px;
+  padding-bottom: 20px;
+  margin: 10px;
+  width: 280px;
+}
+@media screen and (min-width: 768px) {
+  .repo-list-item {
+    width: 200px;
+    height: 230px;
+  }
+}
+.each-repo-img {
+  width: 70px;
+  height: 80px;
+  align-self: center;
+  padding-top: 20px;
+}
+.repo-name {
+  color: #e73959;
+  font-family: 'Roboto';
+  font-size: 17px;
+  font-weight: 500;
+  align-self: center;
+  margin-bottom: 0px;
+}
+.icon-count-container {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0px;
+}
+.repo-icons {
+  height: 15px;
+  width: 15px;
+  margin-right: 15px;
+  margin-bottom: 0px;
+}
+.repo-item-info {
+  color: #1e293b;
+  font-family: 'Roboto';
+  font-size: 12px;
+  font-weight: 500;
+  margin-bottom: 0px;
+}
+import './index.css'
+
+const LanguageFilterItem = props => {
+  const {languageItem, activeLanguageId, activeLanguageChange} = props
+  const {id, language} = languageItem
+
+  const activeLanguage = () => {
+    activeLanguageChange(id)
+  }
+
+  return (
+    <li>
+      <button
+        className={
+          activeLanguageId === id ? 'selected-list-item' : 'language-item'
+        }
+        type="button"
+        onClick={activeLanguage}
+      >
+        {language}
+      </button>
+    </li>
+  )
+}
+export default LanguageFilterItem
+.language-item {
+  color: #0f172a;
+  font-family: 'Roboto';
+  font-size: 13px;
+  margin-right: 20px;
+  margin-left: 20px;
+  border: none;
+  background-color: transparent;
+  font-weight: bold;
+}
+.selected-list-item {
+  color: #0284c7;
+  border: 1px solid #0284c7;
+  background-color: transparent;
+  border-radius: 45px;
+  padding-top: 3px;
+  padding-bottom: 3px;
+  padding-left: 15px;
+  padding-right: 15px;
+  margin-right: 20px;
+  margin-left: 20px;
+  font-family: 'Roboto';
+  font-size: 12px;
+  font-weight: 800;
+}
